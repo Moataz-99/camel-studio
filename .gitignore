@@ -1,0 +1,8 @@
+*.log
+.DS_Store
+dist/
+node_modules/
+out/
+vscode/dist/
+vscode/media/
+vscode/catalog/

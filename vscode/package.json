@@ -1,0 +1,89 @@
+{
+  "name": "camel-studio",
+  "displayName": "Camel Studio",
+  "description": "Visual designer for Apache Camel routes in Spring Boot projects: canvas, Data Mapper, global variables, run, trace and debug.",
+  "version": "0.5.0",
+  "publisher": "camel-studio",
+  "license": "UNLICENSED",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "camel",
+    "apache camel",
+    "spring boot",
+    "integration",
+    "designer"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "camelStudio.designer",
+        "displayName": "Camel Studio Designer",
+        "selector": [
+          { "filenamePattern": "*.camel.yaml" },
+          { "filenamePattern": "*.camel.yml" }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "camelStudio.openDesigner",
+        "title": "Open in Camel Studio Designer",
+        "category": "Camel Studio",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "camelStudio.openSource",
+        "title": "Open as Text",
+        "category": "Camel Studio",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "camelStudio.newRoute",
+        "title": "New Route File",
+        "category": "Camel Studio"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "camelStudio.openDesigner",
+          "when": "resourceFilename =~ /\\.camel\\.ya?ml$/ && activeEditor == workbench.editors.files.textFileEditor",
+          "group": "navigation"
+        },
+        {
+          "command": "camelStudio.openSource",
+          "when": "activeCustomEditorId == camelStudio.designer",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "camelStudio.newRoute",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@9"
+        },
+        {
+          "command": "camelStudio.openDesigner",
+          "when": "resourceFilename =~ /\\.camel\\.ya?ml$/",
+          "group": "navigation@9"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "camelStudio.openSource",
+          "when": "activeCustomEditorId == camelStudio.designer"
+        }
+      ]
+    }
+  }
+}

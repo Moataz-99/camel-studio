@@ -1,0 +1,79 @@
+# Order intake: consumes orders from Kafka, then routes them by customer tier.
+- route:
+    id: order-intake
+    description: Consume orders, validate and route by customer tier
+    from:
+      uri: kafka:orders.incoming
+      parameters:
+        brokers: "{{kafka.brokers}}"
+        groupId: order-service
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - setHeader:
+            name: customerTier
+            simple:
+              expression: "${body[customer][tier]}"
+        # Keep this log line: operations search for it.
+        - log:
+            message: "Order ${body[id]} received for tier ${header.customerTier}"
+        - choice:
+            when:
+              - simple:
+                  expression: "${header.customerTier} == 'gold'"
+                steps:
+                  - to:
+                      uri: direct:priority-fulfilment
+              - simple:
+                  expression: "${header.customerTier} == 'silver'"
+                steps:
+                  - setHeader:
+                      name: priority
+                      constant:
+                        expression: "5"
+                  - to:
+                      uri: jms:queue:orders.standard
+            otherwise:
+              steps:
+                - to:
+                    uri: jms:queue:orders.bulk
+        - marshal:
+            json: {}
+        - to:
+            uri: kafka:orders.accepted
+            parameters:
+              brokers: "{{kafka.brokers}}"
+
+# Priority orders are charged through the billing API, with a guarded call.
+- route:
+    id: priority-fulfilment
+    from:
+      uri: direct:priority-fulfilment
+      steps:
+        - doTry:
+            steps:
+              - to:
+                  uri: http:billing.internal/api/charge
+                  parameters:
+                    httpMethod: POST
+              - split:
+                  simple:
+                    expression: "${body[lines]}"
+                  parallelProcessing: true
+                  steps:
+                    - to:
+                        uri: sql:insert into order_line (order_id, sku) values (:#orderId, :#sku)
+            doCatch:
+              - exception:
+                  - org.apache.camel.http.base.HttpOperationFailedException
+                steps:
+                  - log:
+                      message: "Billing rejected the order: ${exception.message}"
+                      loggingLevel: WARN
+                  - to:
+                      uri: kafka:orders.rejected
+            doFinally:
+              steps:
+                - removeHeaders:
+                    pattern: "CamelHttp*"

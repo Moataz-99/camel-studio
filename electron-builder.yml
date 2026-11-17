@@ -1,0 +1,46 @@
+# Packaging: macOS disk images and a Windows installer.
+#   npm run dist        both
+#   npm run dist:mac    macOS only
+#   npm run dist:win    Windows only
+appId: com.camelstudio.desktop
+productName: Camel Studio
+copyright: Camel Studio
+
+directories:
+  output: dist
+  buildResources: build
+
+# The app is fully bundled into out/; no node_modules are shipped.
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: resources/catalog
+    to: catalog
+asar: true
+
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  artifactName: Camel-Studio-${version}-mac-${arch}.${ext}
+  # No Apple Developer ID yet: sign ad hoc so the app can start on Apple Silicon.
+  # Replace with a real identity (and notarize) before wider distribution.
+  identity: "-"
+  hardenedRuntime: false
+  gatekeeperAssess: false
+
+win:
+  icon: build/icon.png
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: Camel-Studio-${version}-windows-setup.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  shortcutName: Camel Studio

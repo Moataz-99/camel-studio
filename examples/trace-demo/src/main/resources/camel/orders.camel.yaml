@@ -1,0 +1,41 @@
+# Checks an order and routes it by tier.
+- route:
+    id: order-check
+    from:
+      uri: direct:order-check
+      steps:
+        - log:
+            message: "Checking ${body}"
+        - choice:
+            when:
+              - simple:
+                  expression: "${body} contains 'gold'"
+                steps:
+                  - setHeader:
+                      name: priority
+                      constant:
+                        expression: high
+                  - to:
+                      uri: direct:audit
+              - simple:
+                  expression: "${body} contains 'bad'"
+                steps:
+                  - throwException:
+                      exceptionType: java.lang.IllegalArgumentException
+                      message: Order rejected
+            otherwise:
+              steps:
+                - setBody:
+                    simple:
+                      expression: "standard: ${body}"
+        - setBody:
+            simple:
+              expression: "checked: ${body}"
+
+- route:
+    id: audit
+    from:
+      uri: direct:audit
+      steps:
+        - log:
+            message: "Audit ${body} priority=${header.priority}"

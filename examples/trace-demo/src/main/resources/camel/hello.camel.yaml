@@ -1,0 +1,14 @@
+# A first route: fires every five seconds and logs a greeting.
+- route:
+    id: hello-timer
+    description: Sample route created with the project
+    from:
+      uri: timer:hello
+      parameters:
+        period: 5000
+      steps:
+        - setBody:
+            simple:
+              expression: "Hello from Trace Demo at ${date:now:HH:mm:ss}"
+        - log:
+            message: "${body}"
