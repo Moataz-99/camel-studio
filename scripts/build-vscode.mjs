@@ -1,7 +1,7 @@
 // Builds the VS Code extension into vscode/ and packages it as a .vsix.
 //   npm run vscode     (runs electron-vite build first for the UI bundle)
 import { build } from 'esbuild'
-import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execFileSync } from 'node:child_process'
@@ -49,6 +49,7 @@ const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).ver
 const manifest = join(ext, 'package.json')
 writeFileSync(manifest, readFileSync(manifest, 'utf8').replace(/"version": "[^"]+"/, `"version": "${version}"`))
 if (process.argv.includes('--no-package')) process.exit(0)
+mkdirSync(join(root, 'dist'), { recursive: true })
 const out = join(root, 'dist', `camel-studio-vscode-${version}.vsix`)
 execFileSync(join(root, 'node_modules/.bin/vsce'), ['package', '--no-dependencies', '--allow-missing-repository', '--skip-license', '-o', out], { cwd: ext, stdio: 'inherit' })
 console.log(`Packaged ${out}`)
